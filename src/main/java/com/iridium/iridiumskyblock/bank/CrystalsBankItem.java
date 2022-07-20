@@ -38,34 +38,36 @@ public class CrystalsBankItem extends BankItem {
      */
     @Override
     public double withdraw(Player player, Number amount) {
-        User user = IridiumSkyblock.getInstance().getUserManager().getUser(player);
-        Optional<Island> island = user.getIsland();
+        final User user = IridiumSkyblock.getInstance().getUserManager().getUser(player);
+        final Optional<Island> island = user.getIsland();
 
-        if (island.isPresent()) {
-            IslandBank islandBank = IridiumSkyblock.getInstance().getIslandManager().getIslandBank(island.get(), this);
-            int crystals = Math.min(amount.intValue(), (int) islandBank.getNumber());
-
-            if (crystals > 0) {
-                islandBank.setNumber(islandBank.getNumber() - crystals);
-                player.getInventory().addItem(IridiumSkyblock.getInstance().getIslandManager().getIslandCrystal(crystals)).values().forEach(itemStack ->
-                        player.getWorld().dropItem(player.getLocation(), itemStack)
-                );
-                player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().bankWithdrew
-                        .replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix))
-                        .replace("%amount%", String.valueOf(crystals))
-                        .replace("%type%", getDisplayName())
-                );
-            } else {
-                player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().insufficientFundsToWithdrew
-                        .replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix))
-                        .replace("%type%", getDisplayName())
-                );
-            }
-            return crystals;
-        } else {
+        if (!island.isPresent()) {
             player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().noIsland.replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix)));
+            return 0;
         }
-        return 0;
+
+        final IslandBank islandBank = IridiumSkyblock.getInstance().getIslandManager().getIslandBank(island.get(), this);
+        final int crystals = Math.min(amount.intValue(), (int) islandBank.getNumber());
+
+        if (crystals <= 0) {
+            player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().insufficientFundsToWithdrew
+                            .replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix))
+                    .replace("%type%", getDisplayName())
+            );
+            return crystals;
+        }
+
+        islandBank.setNumber(islandBank.getNumber() - crystals);
+        player.getInventory().addItem(IridiumSkyblock.getInstance().getIslandManager().getIslandCrystal(crystals)).values().forEach(itemStack ->
+                player.getWorld().dropItem(player.getLocation(), itemStack)
+        );
+        player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().bankWithdrew
+                        .replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix))
+                .replace("%amount%", String.valueOf(crystals))
+                .replace("%type%", getDisplayName())
+        );
+
+        return crystals;
     }
 
     /**
@@ -76,7 +78,8 @@ public class CrystalsBankItem extends BankItem {
      */
     @Override
     public double deposit(Player player, Number amount) {
-        Optional<Island> islandOptional = IridiumSkyblock.getInstance().getUserManager().getUser(player).getIsland();
+        final Optional<Island> islandOptional = IridiumSkyblock.getInstance().getUserManager().getUser(player).getIsland();
+
         if (!islandOptional.isPresent()) {
             player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().noIsland.replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix)));
             return 0;
@@ -84,8 +87,8 @@ public class CrystalsBankItem extends BankItem {
 
         int remainingItemAmount = amount.intValue();
         int depositAmount = 0;
-
         ItemStack[] contents = player.getInventory().getContents();
+
         for (int i = 0; i < contents.length && remainingItemAmount > 0; i++) {
             ItemStack itemStack = contents[i];
 

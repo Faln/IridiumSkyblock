@@ -38,32 +38,33 @@ public class ExperienceBankItem extends BankItem {
      */
     @Override
     public double withdraw(Player player, Number amount) {
-        User user = IridiumSkyblock.getInstance().getUserManager().getUser(player);
-        Optional<Island> island = user.getIsland();
+        final User user = IridiumSkyblock.getInstance().getUserManager().getUser(player);
+        final Optional<Island> island = user.getIsland();
 
-        if (island.isPresent()) {
-            IslandBank islandBank = IridiumSkyblock.getInstance().getIslandManager().getIslandBank(island.get(), this);
-            int experience = Math.min(amount.intValue(), (int) islandBank.getNumber());
-
-            if (experience > 0) {
-                islandBank.setNumber(islandBank.getNumber() - experience);
-                PlayerUtils.setTotalExperience(player, PlayerUtils.getTotalExperience(player) + experience);
-                player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().bankWithdrew
-                        .replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix))
-                        .replace("%amount%", String.valueOf(experience))
-                        .replace("%type%", getDisplayName())
-                );
-            } else {
-                player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().insufficientFundsToWithdrew
-                        .replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix))
-                        .replace("%type%", getDisplayName())
-                );
-            }
-            return experience;
-        } else {
+        if (!island.isPresent()) {
             player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().noIsland.replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix)));
+            return 0;
         }
-        return 0;
+
+        final IslandBank islandBank = IridiumSkyblock.getInstance().getIslandManager().getIslandBank(island.get(), this);
+        final int experience = Math.min(amount.intValue(), (int) islandBank.getNumber());
+
+        if (experience <= 0) {
+            player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().insufficientFundsToWithdrew
+                            .replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix))
+                    .replace("%type%", getDisplayName())
+            );
+            return experience;
+        }
+
+        islandBank.setNumber(islandBank.getNumber() - experience);
+        PlayerUtils.setTotalExperience(player, PlayerUtils.getTotalExperience(player) + experience);
+        player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().bankWithdrew
+                        .replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix))
+                .replace("%amount%", String.valueOf(experience))
+                .replace("%type%", getDisplayName())
+        );
+        return experience;
     }
 
     /**
@@ -74,31 +75,32 @@ public class ExperienceBankItem extends BankItem {
      */
     @Override
     public double deposit(Player player, Number amount) {
-        User user = IridiumSkyblock.getInstance().getUserManager().getUser(player);
-        Optional<Island> island = user.getIsland();
+        final User user = IridiumSkyblock.getInstance().getUserManager().getUser(player);
+        final Optional<Island> island = user.getIsland();
 
-        if (island.isPresent()) {
-            IslandBank islandBank = IridiumSkyblock.getInstance().getIslandManager().getIslandBank(island.get(), this);
-            int experience = Math.min(amount.intValue(), PlayerUtils.getTotalExperience(player));
-            if (experience > 0) {
-                islandBank.setNumber(islandBank.getNumber() + experience);
-                PlayerUtils.setTotalExperience(player, PlayerUtils.getTotalExperience(player) - experience);
-                player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().bankDeposited
-                        .replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix))
-                        .replace("%amount%", String.valueOf(experience))
-                        .replace("%type%", getDisplayName())
-                );
-            } else {
-                player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().insufficientFundsToDeposit
-                        .replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix))
-                        .replace("%type%", getDisplayName())
-                );
-            }
-            return experience;
-        } else {
+        if (!island.isPresent()) {
             player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().noIsland.replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix)));
+            return 0;
         }
-        return 0;
+
+        final IslandBank islandBank = IridiumSkyblock.getInstance().getIslandManager().getIslandBank(island.get(), this);
+        final int experience = Math.min(amount.intValue(), PlayerUtils.getTotalExperience(player));
+        if (experience <= 0) {
+            player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().insufficientFundsToDeposit
+                            .replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix))
+                    .replace("%type%", getDisplayName())
+            );
+            return experience;
+        }
+
+        islandBank.setNumber(islandBank.getNumber() + experience);
+        PlayerUtils.setTotalExperience(player, PlayerUtils.getTotalExperience(player) - experience);
+        player.sendMessage(StringUtils.color(IridiumSkyblock.getInstance().getMessages().bankDeposited
+                        .replace("%prefix%", IridiumSkyblock.getInstance().getConfiguration().prefix))
+                .replace("%amount%", String.valueOf(experience))
+                .replace("%type%", getDisplayName())
+        );
+        return experience;
     }
 
     /**
